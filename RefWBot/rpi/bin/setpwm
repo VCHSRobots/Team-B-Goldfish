@@ -1,0 +1,62 @@
+#! /usr/bin/python3
+# setpwm -- set a pwm value in the arduino
+# EPIC Robotz, dlb, Feb 2021
+
+import sys
+import arduino_wb
+import arduino_reg_map as reg
+import utils 
+import time
+
+regnames = [reg.adr2name(adr) for adr in reg.pwm_chans]
+if len(sys.argv) < 3:
+	print("setpwm -- sets the pwm of an output pwm pin on the arduino.")
+	print("usage: setpwm chan val")
+	print("where chan can be one of the following: \nALL %s" %  " ".join(regnames))
+	print("and val is between 0.0 and 1.0.")
+	print("Note also, that 0 can be used instead of ALL, and the 'PWM'")
+	print("in each register name can be omitted.")
+	sys.exit()
+
+schan = sys.argv[1]
+try:
+	i = int(schan)
+	if i == 0: 
+		schan = "ALL"
+	else:
+		schan = "PWM%d" % i
+except ValueError:
+	schan = sys.argv[1]
+
+adr = -1
+if schan.lower() == "all": 
+	schan = "ALL"
+	adr = 0
+else:
+	for n in regnames:
+		if schan.lower() == n.lower():
+			adr = reg.name2adr(n)
+			schan = n
+			break
+if adr < 0:
+	print("Invalid chan.")
+	sys.exit() 
+
+try:
+	val = float(sys.argv[2])
+except ValueError:
+	print("Argument for pwm value must be a decimal number between 0 and 1.")
+	sys.exit()
+
+if val < 0 or val > 1.0:
+	print("Argument for pwm value is out of range. Must be 0.0 to 1.0.")
+	sys.exit()
+
+a = arduino_wb.Arduino_wb()
+try:
+	a.set_pwm(adr, val)
+except:
+	print("Failed. Bus error!")
+	sys.exit()
+print("PWM channel %s set to %6.3f." % (schan, val))
+

@@ -1,0 +1,53 @@
+#! /usr/bin/python3
+# getreg -- python cli program to get data from a reg on the ardunio
+# EPIC Robotz, dlb, Feb 2021
+
+import sys
+import arduino_wb 
+import arduino_reg_map as reg
+
+def fmtbinary(x):
+	s = ""
+	for _ in range(8):
+		if x & 0x80 != 0: s += "1"
+		else: s += "0"
+		x = x << 1
+	return s
+
+if len(sys.argv) < 2:
+	i = 0
+	snames = ""
+	allnames = reg.get_reg_names()
+	for n in allnames:
+		if i % 6 == 0 and snames != "": snames += "\n"
+		snames += n + " "
+		i += 1
+	print("getreg -- gets a register in the ardunio using the i2c bus.")
+	print("Usage: getreg reg")
+	print("where reg is the interger number of a registor, or it is")
+	print("one of the following:")
+	print("%s\n" % snames)
+	sys.exit()
+
+regname = sys.argv[1]
+rnum = reg.name2adr(regname)
+if rnum < 0:
+	# Maybe its a number.
+	try:
+		rnum = int(sys.argv[1])
+	except ValueError:
+		print("%s is not a known registor name." % regname)
+		sys.exit()
+	if rnum < 0 or rnum > reg.LAST:
+		print("Registor numbers must be between 0 and %d." % reg.LAST)
+		sys.exit() 
+
+a = arduino_wb.Arduino_wb()
+try:
+	dd = a.readreg(rnum)
+except IOError:
+	print("Failed to read reg. Bus Error!")
+	sys.exit()
+rname = reg.adr2name(rnum)
+print("Reg %s [%d] = %d = 0x%02x  = [%s].\n" % (rname, rnum, dd, dd, fmtbinary(dd)))
+

@@ -1,0 +1,12 @@
+#! /usr/bin/python3.7
+# initservos -- Init the servo board connected to the pi
+# EPIC Robotz, dlb, Feb 2021
+
+import pca9685 as pca
+
+board = pca.PCA9685()
+board.init()
+if board.is_initialized():
+    print("Servo board should be initalized.  Servo settings let unchanged.")
+else:
+    print("Problem initailizing board.  Probably due to IO Error on the I2C bus.")

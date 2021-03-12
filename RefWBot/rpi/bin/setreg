@@ -1,0 +1,55 @@
+#! /usr/bin/python3
+# setreg -- python cli program to set a register on the ardunio
+# EPIC Robotz, dlb, Feb 2021
+
+import sys
+import arduino_wb
+import arduino_reg_map as reg
+
+if len(sys.argv) < 3:
+	print("setreg -- set a register in the ardunio using the i2c bus.\n")
+	print("Usage: setreg reg-name  data\nwhere reg-name is one of the following names,")
+	print("and data is a number (0-255).\n")  
+	print("Possible names: ")
+	i = 0
+	snames = ""
+	allnames = reg.get_reg_names()
+	for n in allnames:
+		if i % 6 == 0: snames += "\n"
+		snames += n + " "
+		i += 1
+	print("Possible registers: %s\n" % snames)
+	sys.exit()
+
+regname = sys.argv[1]
+rnum = reg.name2adr(regname)
+if rnum < 0:
+	print("%s is an unknown registor." % regname)
+	sys.exit()
+if rnum < reg.RW0:
+	print("%s is a read-only registor." % regname)
+	sys.exit()
+if rnum > reg.LAST:
+	print("%s is greater than address of last register. Internal Error!")
+	sys.exit()
+try:
+	dat = int(sys.argv[2])
+except ValueError:
+	print("Data argument must be numbers.\n")
+	sys.exit()
+if dat < 0 or dat > 255:
+	print("Data must be between 0 and 255.\n")
+	sys.exit()
+a = arduino_wb.Arduino_wb()
+try:
+	a.writereg(rnum, dat)
+	dd = a.readreg(rnum)
+except:
+	print("Failed. Bus error!")
+	sys.exit()
+if dd == dat:
+	print("Success: readback successful. %d is in reg %s.\n" % (dd, regname))
+	sys.exit()
+else:
+	print("Failure: readback unsuccessful. %d found instead of %d.\n" % (dd, dat))
+	sys.exit()

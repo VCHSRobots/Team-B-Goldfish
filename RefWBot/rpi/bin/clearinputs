@@ -1,0 +1,10 @@
+#! /usr/bin/python3
+# clearinputs -- clear the change bits for the digital inputs
+# EPIC Robotz, dlb, Feb 2021
+
+import arduino_wb
+
+a = arduino_wb.Arduino_wb()
+okay = a.clear_change_bits()
+if okay: print("Change bits should be cleared.")
+else: print("Failed to change bits.  Bus Error!")

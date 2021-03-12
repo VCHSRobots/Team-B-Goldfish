@@ -1,0 +1,34 @@
+#! /usr/bin/python3
+# setservo -- sets a servo to a postion 
+# EPIC Robotz, dlb, Feb 2021
+
+import time
+import sys
+import pca9685 as pca
+
+if len(sys.argv) < 3:
+	print("setservo -- sets position of a servo connected to the pca9685 module")
+	print("usage: setservo chan usec")
+	print("where chan is a number between 0-15, and usec is the pulsewigth in usecs.")
+	print("Note: the module should be initalized with initservos before using this program.")
+	sys.exit()
+  
+try:
+	chan = int(sys.argv[1])
+	usec = int(sys.argv[2])
+except ValueError:
+	print("Arguments must be numbers.")
+	sys.exit()
+if chan < 0 or chan > 15:
+	print("Channel must be between 0 and 15.")
+	sys.exit()
+if usec < 0 or usec > 10000:
+	print("usec out of range.")
+	sys.exit()
+
+servoboard = pca.PCA9685(skipinit=True)
+okay = servoboard.set_pwm(chan, usec)
+if not okay:
+	print("Unable to set the servo due to IO Errors -- probably due to the I2C bus.")
+	sys.exit()
+print("Servo on channel %d set to %d usecs." % (chan, usec))
